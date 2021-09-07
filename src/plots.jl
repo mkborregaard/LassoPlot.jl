@@ -30,7 +30,7 @@ and add any features of the plot afterwards.
 - `kwargs...` additional keyword arguments passed along to fit(GammaLassoPath,...)
 """
 @recipe function f(path::RegularizationPath;
-    x=:segment, varnames=nothing, selectedvars=[], select=MinAICc(), showselectors=[MinAICc(), MinCVmse(path, 10), MinCV1se(path, 10)])
+    xs=:segment, varnames=nothing, selectedvars=[], select=MinAICc(), showselectors=[MinAICc(), MinCVmse(path, 10), MinCV1se(path, 10)])
     β=coef(path)
     if hasintercept(path)
         β = β[2:end,:]
@@ -42,16 +42,15 @@ and add any features of the plot afterwards.
         varnames=[Symbol("x$i") for i=1:p]
     end
 
-    indata=DataFrame()
-    if x==:λ
-        indata[:, x]=path.λ
-    elseif x==:logλ
-        indata[:, x]=log.(path.λ)
+    if xs==:λ
+        indata1=path.λ
+    elseif xs==:logλ
+        indata1=log.(path.λ)
     else
-        x=:segment
-        indata[:, x]=1:nλ
+        xs=:segment
+        indata1=1:nλ
     end
-    outdata = deepcopy(indata)
+    outdata = deepcopy(indata1)
 
     # automatic selectors
     # xintercept = Float64[]
@@ -64,10 +63,10 @@ and add any features of the plot afterwards.
     for s in selectors
         ixshown = segselect(path, s)
         if select == s
-            push!(solid_vlines,indata[ixshown,x])
+            push!(solid_vlines,indata1[ixshown])
             ixselect = ixshown
         else
-            push!(dashed_vlines,indata[ixshown,x])
+            push!(dashed_vlines,indata1[ixshown])
         end
     end
 
