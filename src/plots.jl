@@ -29,7 +29,7 @@ and add any features of the plot afterwards.
 - `selectedvars=[]` Subset of the variables to present, or empty vector for all
 - `kwargs...` additional keyword arguments passed along to fit(GammaLassoPath,...)
 """
-function Plots.plot(path::RegularizationPath, args...;
+@recipe function f(path::RegularizationPath;
     x=:segment, varnames=nothing, selectedvars=[], select=MinAICc(), showselectors=[MinAICc(), MinCVmse(path, 10), MinCV1se(path, 10)])
     β=coef(path)
     if hasintercept(path)
@@ -96,19 +96,32 @@ function Plots.plot(path::RegularizationPath, args...;
     inmdframe = inmdframe[convert(BitArray,map(b->!isnan(b),inmdframe.coefficients)),:]
     outmdframe = outmdframe[convert(BitArray,map(b->!isnan(b),outmdframe.coefficients)),:]
 
-    p = plot(xlabel=string(x), ylabel="Coefficient", args...)
+    xlabel --> string(x)
+    ylabel --> "Coefficient"
+
+    if length(dashed_vlines) > 0
+        @series begin
+            seriestype := :vline
+            line := (:dash, 0.5, 2, :black)
+            primary := false
+            dashed_vlines
+        end
+    end
+    if length(solid_vlines) > 0
+        @series begin
+            seriestype := :vline
+            line := (:sold, 0.5, 2, :black)
+            primary := false
+            solid_vlines
+        end
+    end
     if size(inmdframe,1) > 0
+        @series begin
+            
+        end
       @df inmdframe plot!(cols(x), :coefficients, group=:variable)
     end
     if size(outmdframe,1) > 0
       @df outmdframe plot!(cols(x), :coefficients, group=:variable, palette=:grays)
     end
-    if length(dashed_vlines) > 0
-        vline!(dashed_vlines, line = (:dash, 0.5, 2, :black), label="")
-    end
-    if length(solid_vlines) > 0
-        vline!(solid_vlines, line = (:solid, 0.5, 2, :black), label="")
-    end
-
-    p
 end
